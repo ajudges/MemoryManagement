@@ -7,6 +7,8 @@
 #include "graphnode.h"
 #include "graphedge.h"
 #include "chatbot.h"
+#include <iostream>
+#include <string>
 
 // constructor WITHOUT memory allocation
 ChatBot::ChatBot()
@@ -15,19 +17,19 @@ ChatBot::ChatBot()
     _image = nullptr;
     _chatLogic = nullptr;
     _rootNode = nullptr;
+    _currentNode = nullptr;
 }
 
 // constructor WITH memory allocation
 ChatBot::ChatBot(std::string filename)
 {
     std::cout << "ChatBot Constructor" << std::endl;
-    
-    // invalidate data handles
-    _chatLogic = nullptr;
-    _rootNode = nullptr;
 
     // load image into heap memory
     _image = new wxBitmap(filename, wxBITMAP_TYPE_PNG);
+    // invalidate data handles
+    _chatLogic = nullptr;
+    _rootNode = nullptr;
 }
 
 ChatBot::~ChatBot()
@@ -46,22 +48,23 @@ ChatBot::~ChatBot()
 ////
 ChatBot::ChatBot(const ChatBot & source)
 {
+    std::cout << "COPYING content of instance " << std::endl;
     _image = source._image;
+
     _chatLogic = source._chatLogic;
+    _chatLogic->SetChatbotHandle(this);
     _rootNode = source._rootNode;
     _currentNode = source._currentNode;
-    std::cout << "COPYING content of instance " << &source << " to instance " << this << std::endl;
 }
 
 ChatBot& ChatBot::operator=(const ChatBot &source)
 {
     std::cout << "ASSIGNING content of instance " << &source << " to instance " << this << std::endl;
-    if (this == &source) return *this;
+    if (this == &source) { return *this;}
     delete _image;
     delete _chatLogic;
     delete _rootNode;
     delete _currentNode;
-
     _image = source._image;
     _chatLogic = source._chatLogic;
     _rootNode = source._rootNode;
@@ -72,11 +75,12 @@ ChatBot& ChatBot::operator=(const ChatBot &source)
 ChatBot::ChatBot(ChatBot &&source)
 {
     std::cout << "MOVING (c’tor) instance " << &source << " to instance " << this << std::endl;
-    _image = source._image;
     _chatLogic = source._chatLogic;
     _rootNode = source._rootNode;
     _currentNode = source._currentNode;
-    source._image = nullptr;
+    _image = source._image;
+    _chatLogic->SetChatbotHandle(this);
+    source._image = NULL;
     source._chatLogic = nullptr;
     source._rootNode = nullptr;
     source._currentNode = nullptr;
@@ -85,15 +89,16 @@ ChatBot::ChatBot(ChatBot &&source)
 ChatBot& ChatBot::operator=(ChatBot &&source)
 {
     std::cout << "MOVING (assign) instance " << &source << " to instance " << this << std::endl;
-    if (this == &source) return *this;
+    if (this == &source) {return *this;}
     delete _image;
-    delete _chatLogic;
-    delete _rootNode;
+    // delete _chatLogic;
+    // delete _rootNode;
 
-    _image = source._image;
     _chatLogic = source._chatLogic;
     _rootNode = source._rootNode;
     _currentNode = source._currentNode;
+    _image = source._image;
+    _chatLogic->SetChatbotHandle(this);
     source._image = nullptr;
     source._chatLogic = nullptr;
     source._rootNode = nullptr;
